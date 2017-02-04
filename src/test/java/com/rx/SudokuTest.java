@@ -3,14 +3,17 @@ package com.rx;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 
 /**
  * Created by hejianjun on 2017/2/3.
  */
-public class SudokuTest{
+public class SudokuTest {
 
     private Sudoku sudoku;
-    public SudokuTest(){
+
+    public SudokuTest() {
         int[][] m = {
                 {9, 0, 0, 3, 0, 0, 4, 0, 5},
                 {7, 4, 0, 0, 0, 0, 0, 3, 0},
@@ -23,7 +26,7 @@ public class SudokuTest{
                 {1, 0, 9, 0, 0, 0, 0, 0, 7}
         };
         try {
-            sudoku=new Sudoku(m);
+            sudoku = new Sudoku(m);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -36,10 +39,15 @@ public class SudokuTest{
 
     @Test
     public void testCalculate() throws Exception {
-        List<int[]> list = sudoku.calculate();
-        for (int[] ints : list) {
-            System.out.println(sudoku.toString(ints));
+        ForkJoinPool forkJoinPool = new ForkJoinPool();
+        ForkJoinTask<List<int[]>> result = forkJoinPool.submit(sudoku);
 
+        int i = 1;
+        for (int[] ints : result.get()) {
+            System.out.println(i++);
+            System.out.println(Sudoku.toString(ints));
         }
+
+        forkJoinPool.shutdown();
     }
 }

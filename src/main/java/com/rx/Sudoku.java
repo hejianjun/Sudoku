@@ -3,29 +3,39 @@ package com.rx;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.RecursiveTask;
 
 
 /**
  *
  */
-public class Sudoku  {
-    private static int[] nums = new int[9];
+public class Sudoku extends RecursiveTask<List<int[]>> {
+    private static int[] numbs = new int[9];
 
     static {
-        for (int i = 0; i < nums.length; i++) {
-            nums[i] = 0b1 << i;
+        for (int i = 0; i < numbs.length; i++) {
+            numbs[i] = 0b1 << i;
         }
     }
 
     private int[] matrix = new int[81];
+    private int index;
+    private int num;
 
-
-    public Sudoku() {
+    public Sudoku(int index, int num) {
         Arrays.fill(matrix, 0b111111111);
+        this.index = index;
+        this.num = num;
     }
 
-    public Sudoku(int[][] m) throws Exception {
-        this();
+    public Sudoku(int[] matrix, int index, int num) {
+        this.matrix = matrix;
+        this.index = index;
+        this.num = num;
+    }
+
+    public Sudoku(int[][] m) throws UnsolvableException {
+        this(-2, 0);
         for (int y = 0; y < m.length; y++) {
             for (int x = 0; x < m[y].length; x++) {
                 if (m[y][x] > 0 && m[y][x] < 10) {
@@ -33,12 +43,44 @@ public class Sudoku  {
                 }
             }
         }
+
     }
+
+    @Override
+    protected List<int[]> compute() {
+        List<int[]> matrixList = new ArrayList<>();
+        try {
+            if (index > -1) {
+                int x = index / 9;
+                int y = Math.floorMod(index, 9);
+                setMatrixPri(matrix, x, y, num);
+            }
+            index = findMinCell(matrix);
+            if (index == -1) {
+                matrixList.add(matrix);
+            } else {
+                List<Integer> numList = num2List(matrix[index]);
+                List<Sudoku> forkList = new ArrayList<>();
+                for (Integer n : numList) {
+                    Sudoku sudoku = new Sudoku(matrix.clone(), index, n);
+                    sudoku.fork();
+                    forkList.add(sudoku);
+                }
+                for (Sudoku sudoku : forkList) {
+                    matrixList.addAll(sudoku.join());
+                }
+            }
+        } catch (UnsolvableException e) {
+            //System.out.println(e);
+        }
+        return matrixList;
+    }
+
 
     public static void setMatrixPri(int[] matrix, int x, int y, int num) throws UnsolvableException {
         int index = x * 9 + y;
         matrix[index] = ~num;
-        int num2 = nums[num - 1];
+        int num2 = numbs[num - 1];
         for (int k = 0; k < 9; k++) {
             if (removeNum(matrix, x, k, num2) == 0) {
                 throw new UnsolvableException(x, k);
@@ -63,7 +105,7 @@ public class Sudoku  {
         int y = Math.floorMod(index, 9);
         int num;
         for (num = 1; num < 10; num++) {
-            if (nums[num-1] == num2) {
+            if (numbs[num - 1] == num2) {
                 break;
             }
         }
@@ -91,32 +133,6 @@ public class Sudoku  {
         return index;
     }
 
-    public static List<int[]> calculate(int[] matrix, int index, int num) {
-        List<int[]> matrixList = new ArrayList<>();
-        try {
-            if (index > 0) {
-                int x = index / 9;
-                int y = Math.floorMod(index, 9);
-                setMatrixPri(matrix, x, y, num);
-            }
-            index = findMinCell(matrix);
-            if (index == -1) {
-                matrixList.add(matrix);
-            } else {
-                List<Integer> numList = num2List(matrix[index]);
-                for (Integer n : numList) {
-                    matrixList.addAll(calculate(matrix.clone(), index, n));
-                }
-            }
-        } catch (UnsolvableException e) {
-            //System.out.println(e);
-        }
-        return matrixList;
-    }
-
-    public List<int[]> calculate() throws Exception {
-        return calculate(matrix, -1, 0);
-    }
 
     public static int removeNum(int[] matrix, int x, int y, int num) {
         int index = x * 9 + y;
@@ -134,15 +150,10 @@ public class Sudoku  {
         return count;
     }
 
-    @Override
-    public String toString() {
-        return toString(matrix);
-    }
-
     public static List<Integer> num2List(int num) {
         List<Integer> list = new ArrayList<>();
         for (int i = 0; i < 9; i++) {
-            if ((nums[i] & num) != 0) {
+            if ((numbs[i] & num) != 0) {
                 list.add(i + 1);
             }
         }
