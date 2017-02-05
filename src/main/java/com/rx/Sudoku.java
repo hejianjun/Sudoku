@@ -7,9 +7,12 @@ import java.util.concurrent.RecursiveTask;
 
 
 /**
- *
+ *数独类
  */
 public class Sudoku extends RecursiveTask<List<int[]>> {
+    /**
+     * 二进制缓存数组
+     */
     private static int[] numbs = new int[9];
 
     static {
@@ -18,24 +21,21 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
         }
     }
 
+    /**
+     * 数独矩阵，负数代表已填数字，正数是数字的二进制位移量
+     */
     private int[] matrix = new int[81];
-    private int index;
-    private int num;
 
-    public Sudoku(int index, int num) {
+    public Sudoku() {
         Arrays.fill(matrix, 0b111111111);
-        this.index = index;
-        this.num = num;
     }
 
-    public Sudoku(int[] matrix, int index, int num) {
+    public Sudoku(int[] matrix) {
         this.matrix = matrix;
-        this.index = index;
-        this.num = num;
     }
 
     public Sudoku(int[][] m) throws UnsolvableException {
-        this(-2, 0);
+        this();
         for (int y = 0; y < m.length; y++) {
             for (int x = 0; x < m[y].length; x++) {
                 if (m[y][x] > 0 && m[y][x] < 10) {
@@ -50,19 +50,18 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
     protected List<int[]> compute() {
         List<int[]> matrixList = new ArrayList<>();
         try {
-            if (index > -1) {
-                int x = index / 9;
-                int y = Math.floorMod(index, 9);
-                setMatrixPri(matrix, x, y, num);
-            }
-            index = findMinCell(matrix);
+            int index = findMinCell(matrix);
             if (index == -1) {
                 matrixList.add(matrix);
             } else {
                 List<Integer> numList = num2List(matrix[index]);
                 List<Sudoku> forkList = new ArrayList<>();
                 for (Integer n : numList) {
-                    Sudoku sudoku = new Sudoku(matrix.clone(), index, n);
+                    int[] matrix2 = matrix.clone();
+                    int x = index / 9;
+                    int y = Math.floorMod(index, 9);
+                    setMatrixPri(matrix2, x, y, n);
+                    Sudoku sudoku = new Sudoku(matrix2);
                     sudoku.fork();
                     forkList.add(sudoku);
                 }
@@ -76,11 +75,21 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
         return matrixList;
     }
 
-
+    /**
+     * 设置矩阵数字
+     * @param matrix 矩阵
+     * @param x 横向坐标
+     * @param y 纵向坐标
+     * @param num 填入数字
+     * @throws UnsolvableException 求解失败，数组无解
+     */
     public static void setMatrixPri(int[] matrix, int x, int y, int num) throws UnsolvableException {
-        int index = x * 9 + y;
-        matrix[index] = ~num;
         int num2 = numbs[num - 1];
+        int index = x * 9 + y;
+        if ((num2 | matrix[index]) != matrix[index]) {
+            throw new UnsolvableException(x, y);
+        }
+        matrix[index] = ~num;
         for (int k = 0; k < 9; k++) {
             if (removeNum(matrix, x, k, num2) == 0) {
                 throw new UnsolvableException(x, k);
@@ -98,8 +107,16 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
                 }
             }
         }
+
     }
 
+    /**
+     * 上面方法的重载
+     * @param matrix 矩阵
+     * @param index 一维索引
+     * @param num2 二进制位移量
+     * @throws UnsolvableException 无解异常
+     */
     public static void setMatrixPri(int[] matrix, int index, int num2) throws UnsolvableException {
         int x = index / 9;
         int y = Math.floorMod(index, 9);
@@ -112,6 +129,12 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
         setMatrixPri(matrix, x, y, num);
     }
 
+    /**
+     * 填入已确定数字并获取最小未确定单元格的索引
+     * @param matrix 矩阵
+     * @return 最小未确定单元格的索引
+     * @throws UnsolvableException 无解异常
+     */
     public static int findMinCell(int[] matrix) throws UnsolvableException {
         int index = -1, min = 9;
         for (int i = 0; i < matrix.length; i++) {
@@ -133,7 +156,14 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
         return index;
     }
 
-
+    /**
+     * 移除矩阵单元格某个数字的可能性
+     * @param matrix 矩阵
+     * @param x 横向坐标
+     * @param y 纵向坐标
+     * @param num 数字的二进制位移量
+     * @return 二进制可能性，0为无解
+     */
     public static int removeNum(int[] matrix, int x, int y, int num) {
         int index = x * 9 + y;
         if (matrix[index] > 0) {
@@ -142,6 +172,11 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
         return matrix[index];
     }
 
+    /**
+     * 获取二进制位移量中的可能性
+     * @param value 二进制位移量
+     * @return 可能的数量
+     */
     private static int count1OfValue(int value) {
         int count;
         for (count = 0; value > 0; count++) {
@@ -150,6 +185,11 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
         return count;
     }
 
+    /**
+     * 二进制位移量转换为数字列表
+     * @param num 二进制位移量
+     * @return 数字列表
+     */
     public static List<Integer> num2List(int num) {
         List<Integer> list = new ArrayList<>();
         for (int i = 0; i < 9; i++) {
@@ -160,14 +200,24 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
         return list;
     }
 
-    public static String num2String(int num) {
-        if (num < 0) {
-            return String.format("%2s", ~num);
+    /**
+     * 矩阵单元格转换为字符串
+     * @param cell 单元格中的数字
+     * @return 显示字符串
+     */
+    public static String cell2String(int cell) {
+        if (cell < 0) {
+            return String.format("%2s", ~cell);
         } else {
-            return String.format("%2s", num2List(num));
+            return String.format("%2s", num2List(cell));
         }
     }
 
+    /**
+     * 矩阵转换为字符串
+     * @param matrix 矩阵
+     * @return 字符串
+     */
     public static String toString(int[] matrix) {
         StringBuilder sb = new StringBuilder();
         for (int y = 0; y < 9; y++) {
@@ -177,7 +227,7 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
                 if (x != 0) {
                     sb.append(",");
                 }
-                sb.append(num2String(matrix[index]));
+                sb.append(cell2String(matrix[index]));
             }
             sb.append("]\n");
         }

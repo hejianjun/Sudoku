@@ -41,13 +41,9 @@ public class SudokuTest {
     public void testCalculate() throws Exception {
         ForkJoinPool forkJoinPool = new ForkJoinPool();
         ForkJoinTask<List<int[]>> result = forkJoinPool.submit(sudoku);
-
-        int i = 1;
         for (int[] ints : result.get()) {
-            System.out.println(i++);
             System.out.println(Sudoku.toString(ints));
         }
-
         forkJoinPool.shutdown();
     }
 }
