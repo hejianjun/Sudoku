@@ -2,6 +2,7 @@ package com.rx;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.RecursiveTask;
 
@@ -62,10 +63,9 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
                     int y = Math.floorMod(index, 9);
                     setMatrixPri(matrix2, x, y, n);
                     Sudoku sudoku = new Sudoku(matrix2);
-                    sudoku.fork();
                     forkList.add(sudoku);
                 }
-                for (Sudoku sudoku : forkList) {
+                for (Sudoku sudoku : invokeAll(forkList)) {
                     matrixList.addAll(sudoku.join());
                 }
             }
