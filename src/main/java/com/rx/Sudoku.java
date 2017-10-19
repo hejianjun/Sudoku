@@ -7,7 +7,7 @@ import java.util.concurrent.RecursiveTask;
 
 
 /**
- *数独类
+ * 数独类
  */
 public class Sudoku extends RecursiveTask<List<int[]>> {
     /**
@@ -77,10 +77,11 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
 
     /**
      * 设置矩阵数字
+     *
      * @param matrix 矩阵
-     * @param x 横向坐标
-     * @param y 纵向坐标
-     * @param num 填入数字
+     * @param x      横向坐标
+     * @param y      纵向坐标
+     * @param num    填入数字
      * @throws UnsolvableException 求解失败，数组无解
      */
     public static void setMatrixPri(int[] matrix, int x, int y, int num) throws UnsolvableException {
@@ -112,9 +113,10 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
 
     /**
      * 上面方法的重载
+     *
      * @param matrix 矩阵
-     * @param index 一维索引
-     * @param num2 二进制位移量
+     * @param index  一维索引
+     * @param num2   二进制位移量
      * @throws UnsolvableException 无解异常
      */
     public static void setMatrixPri(int[] matrix, int index, int num2) throws UnsolvableException {
@@ -131,6 +133,7 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
 
     /**
      * 填入已确定数字并获取最小未确定单元格的索引
+     *
      * @param matrix 矩阵
      * @return 最小未确定单元格的索引
      * @throws UnsolvableException 无解异常
@@ -158,10 +161,11 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
 
     /**
      * 移除矩阵单元格某个数字的可能性
+     *
      * @param matrix 矩阵
-     * @param x 横向坐标
-     * @param y 纵向坐标
-     * @param num 数字的二进制位移量
+     * @param x      横向坐标
+     * @param y      纵向坐标
+     * @param num    数字的二进制位移量
      * @return 二进制可能性，0为无解
      */
     public static int removeNum(int[] matrix, int x, int y, int num) {
@@ -174,6 +178,7 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
 
     /**
      * 获取二进制位移量中的可能性
+     *
      * @param value 二进制位移量
      * @return 可能的数量
      */
@@ -187,6 +192,7 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
 
     /**
      * 二进制位移量转换为数字列表
+     *
      * @param num 二进制位移量
      * @return 数字列表
      */
@@ -202,6 +208,7 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
 
     /**
      * 矩阵单元格转换为字符串
+     *
      * @param cell 单元格中的数字
      * @return 显示字符串
      */
@@ -215,6 +222,7 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
 
     /**
      * 矩阵转换为字符串
+     *
      * @param matrix 矩阵
      * @return 字符串
      */
@@ -234,4 +242,8 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
         return sb.toString();
     }
 
+    @Override
+    public String toString() {
+        return Sudoku.toString(matrix);
+    }
 }

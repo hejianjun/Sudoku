@@ -34,7 +34,7 @@ public class SudokuTest {
 
     @Test
     public void testToString() throws Exception {
-        System.out.println(sudoku);
+        System.out.println(sudoku.toString());
     }
 
     @Test
