@@ -57,15 +57,22 @@ public class Sudoku extends RecursiveTask<List<int[]>> {
             } else {
                 List<Integer> numList = num2List(matrix[index]);
                 List<Sudoku> forkList = new ArrayList<>();
-                for (Integer n : numList) {
+                int last = numList.size() - 1;
+                for (int i = last; i >= 0; --i) {
+                    Integer n = numList.get(i);
                     int[] matrix2 = matrix.clone();
                     int x = index / 9;
                     int y = Math.floorMod(index, 9);
                     setMatrixPri(matrix2, x, y, n);
                     Sudoku sudoku = new Sudoku(matrix2);
-                    forkList.add(sudoku);
+                    if (i != 0) {
+                        sudoku.fork();
+                        forkList.add(sudoku);
+                    } else {
+                        matrixList.addAll(sudoku.compute());
+                    }
                 }
-                for (Sudoku sudoku : invokeAll(forkList)) {
+                for (Sudoku sudoku : forkList) {
                     matrixList.addAll(sudoku.join());
                 }
             }
